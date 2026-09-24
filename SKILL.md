@@ -30,15 +30,31 @@ Understand the requested change objective and work toward it incrementally.
 
 Do not treat the entire objective as one required mutation. Decompose the work when useful and produce concrete increments.
 
-### 2. Produce a mutation
+### 2. Develop using tests when appropriate
+
+Use tests as part of the development process when the change benefits from test-driven development.
+
+A test may intentionally fail while the agent is developing the corresponding production code. A development-time test failure does **not** by itself mean that the workflow has rejected a mutation.
+
+The agent may use the normal TDD cycle:
+
+```text
+RED
+  -> GREEN
+  -> REFACTOR
+```
+
+The workflow's verification boundary determines which captured mutation becomes accepted progress; it does not prevent the agent from using failing tests as an intermediate development technique.
+
+### 3. Produce a mutation
 
 When making a change, treat the resulting concrete change set as a mutation.
 
-After producing a mutation, stop active implementation work long enough for the workflow to capture and verify it.
+After a mutation is captured, do **not** wait for verification as a blocking agent action. Continue execution normally. The workflow may interrupt the active execution if verification fails.
 
 Do not assume that a mutation is accepted merely because it looks correct or because the agent believes the objective is complete.
 
-### 3. Respect the verification boundary
+### 4. Respect the verification boundary
 
 Every captured mutation crosses the verification boundary.
 
@@ -46,7 +62,9 @@ The agent MUST NOT bypass, skip, or self-approve verification.
 
 Verification should be short and synchronous enough to preserve the continuous agent feedback loop.
 
-### 4. On PASS
+The agent does not need to poll for or wait on verification results. It should remain able to react if the active execution is interrupted by a failed verification.
+
+### 5. On PASS
 
 When verification returns **PASS**:
 
@@ -55,7 +73,7 @@ When verification returns **PASS**:
 - produce the next mutation if the change objective is not complete;
 - do not redo accepted work without a reason.
 
-### 5. On FAIL
+### 6. On FAIL
 
 When verification returns **FAIL**, follow this sequence:
 
@@ -77,7 +95,7 @@ The agent MUST:
 
 A failure does not require starting a new execution solely to continue the task.
 
-### 6. Do not confuse observation with verification
+### 7. Do not confuse observation with verification
 
 Capturing or observing a mutation only establishes what changed.
 
@@ -85,7 +103,7 @@ Observation does not mean that the mutation passed verification.
 
 Only the configured verification result determines acceptance.
 
-### 7. Continue until the objective is actually satisfied
+### 8. Continue until the objective is actually satisfied
 
 The agent may consider the change objective complete only after the workflow's required verification and acceptance conditions have been satisfied.
 
@@ -101,31 +119,37 @@ RECEIVE CHANGE OBJECTIVE
         v
    REASON / IMPLEMENT
         |
+        +---- USE TESTS / TDD AS NEEDED
+        |
         v
    PRODUCE MUTATION
         |
         v
-   WAIT FOR CAPTURE
+   CONTINUE EXECUTION
         |
-        v
-      VERIFY
-       /   \
-   PASS     FAIL
-    |         |
-    v         v
- ACCEPT   INTERRUPT
-    |         |
-    |      REJECT / RESTORE
-    |         |
-    |       FEEDBACK
-    |         |
-    +---- CONTINUE SAME EXECUTION
-              |
-              v
-        NEXT MUTATION
-              |
-              v
-      OBJECTIVE COMPLETE?
+        +------> WORKFLOW CAPTURES + VERIFIES
+        |                    |
+        |                 PASS / FAIL
+        |                  /       \
+        |                PASS       FAIL
+        |                 |           |
+        |                 v           v
+        |              ACCEPT     INTERRUPT
+        |                 |           |
+        |                 |       REJECT / RESTORE
+        |                 |           |
+        |                 |         FEEDBACK
+        |                 |           |
+        +-----------------+-----------+
+                          |
+                          v
+                  CONTINUE SAME EXECUTION
+                          |
+                          v
+                    NEXT MUTATION
+                          |
+                          v
+                 OBJECTIVE COMPLETE?
 ```
 
 ## Runtime Independence
